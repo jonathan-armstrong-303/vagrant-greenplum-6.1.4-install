@@ -114,7 +114,7 @@ To bypass this error, clean up the known hosts file appropriately.
     
 ## OPTIONAL: Reset sshd parameters
 
-You may wish to restore sshd parameters to be a bit more security conscious.  Needless to say, this configuration is anything but hardened for a security environment (found in the [reset_sshd_params.sh] script in this repository):
+You may wish to restore sshd parameters to be a bit more security conscious.  Needless to say, this configuration is anything but hardened for a security environment (found in the *reset_sshd_params.sh* script in this repository).  Run the following on each of the four nodes:
 
     sudo su -
 
