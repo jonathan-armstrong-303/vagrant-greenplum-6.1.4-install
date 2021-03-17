@@ -15,15 +15,16 @@ Configuration was tested with Vagrant 2.2.6.  (If Vagrant is not installed, I've
 
 ## Installation 
 
-Note that there are three sections regarding installation prerequisites.  The tl;dr:
+Note that there are four sections regarding installation prerequisites.  [The tl;dr]:
 
-1. The Vagrant application itself
+1. The Vagrant application itself [if not already installed]
 2. External Vagrant packages;
 
-... and one "postrequisite":
+... one mandatory "postrequisite":
 
 3. One script that must be scp'd and executed manually on the Greenplum master node after the main Vagrant build has transpired.
 
+... and one optional script to reset /etc/ssh/sshd.config params to be more security conscious after passwordless ssh is established between all nodes (see below)
 
 **The longer explanation:**
 
@@ -33,30 +34,31 @@ The author had an incredible amount of difficulty with a couple of [usually] fai
 
 1. Setting up passwordless ssh between nodes which necessitated changing some of the /etc/sshd/sshd.config parameters (I don't even know if these were _necessarily_ necessary to remove; however, after a couple of days of flailing with what should have been a trivial task, I did not mess with the configuration once it was finally working);
 
-2. Getting the final lap of the installation (which must be run as the "gpadmin" user -- not root) to transpire using a Vagrant provisioning script.
+2. Getting the final lap of the installation (which must be run as the "gpadmin" user -- not root) to transpire using a regular Vagrant provisioning script executed when the cluster is built.
 
 (1) was finally resolved by installing the vagrant reboot plugin and rebooting the cluster after disabling the SELINUX security module, but there were continual problems getting (2) to transpire in a totally turnkey manner.
 
-The only way I could get the "gpadmin user portion" of the installation to work in a completely automated manner was found to be highly unintuitive and aesthetically lacking (namely, creating a crontab that fired off a one-time disposable installation script that would self-destruct after the first instantiation of the cluster).  In light of this, there is one semi-manual step of this installation process, which merely involves scping over a single script to the Greenplum master node and manually executing it as the gpadmin user.  
+The only way I could get the gpadmin ("postrequisite") portion of the installation to work in a completely automated manner was found to be highly unintuitive and aesthetically lacking (namely, trying to run everything as "su gpadmin" or creating a crontab that fired off a one-time disposable installation script that would self-destruct after the first instantiation of the cluster).  In light of this, there is [one] semi-manual step of this installation process, which merely involves scping over a single script to the Greenplum master node and manually executing it as the gpadmin user.  
 
 ## Pre-Installation: Virtualbox/Vagrant Installation
 
-If you already have Vagrant installed (this build was tested with Vagrant 2.2.6) you can skip to the next installation step (if really unfamiliar with Vagrant, it would behoove you to do a little familiarization with it just so you're able to start/stop/reload/etc Vagrant boxes elegantly).
+If you already have Virtualbox and Vagrant installed (this build was tested with Vagrant 2.2.6) you can skip to the next installation step (if really unfamiliar with Vagrant, it would behoove you to do a little familiarization with it just so you're able to start/stop/reload/etc Vagrant boxes elegantly).
 
-Update all packages and install Oracle Virtualbox
+Update all packages and install Oracle Virtualbox:
+
     sudo apt update
     sudo apt install virtualbox
 
 Visit Vagrant download page at https://www.vagrantup.com/downloads.html
-(Could not get the apt update to work on my system -- go figure)
+(Could not get the apt update to work on my system -- hence the need to visit the download page itself.)
 
-Download latest Vagrant version [2.2.14 as of time of writing], unzip, and install
+Download latest Vagrant version [2.2.14 as of time of writing], unzip, and install:
 
     cd ~/Downloads
     unzip ./vagrant_2.2.14_linux_amd64.zip
     sudo apt install vagrant
 
-Check status of Vagrant install. I got "2.2.6" as output even though I supposedly installed 2.2.14
+Check status of Vagrant install. I got "2.2.6" as output (even though I supposedly installed 2.2.14!)
 
     vagrant --version
 
@@ -66,11 +68,11 @@ Create a sample directory for Vagrant boxes
     cd ~/vagrant
 
 You will place the "Vagrantfile" Vagrant config in the ~/vagrant directory.
-However, don't "vagrant up" yet.  We need to install some Vagrant plugins
+However, don't "vagrant up" yet.  We still need to install some Vagrant plugins
 
 ## Installation (Vagrant Plug-Ins/Grab Greenplum Binary For Posterity)
 
-Install plugins which are necessary for the subsequent Greenplum install:
+Install plugins which are necessary &/or helpful in the subsequent Greenplum install:
 
     vagrant plugin install vagrant-scp
     vagrant plugin install vagrant-hostsupdater
@@ -93,29 +95,53 @@ Copy Greenplum binary to guest:
 
     vagrant scp open-source-greenplum-db-6.14.0-rhel7-x86_64.rpm :open-source-greenplum-db-6.14.0-rhel7-x86_64.rpm
 
-## Post-Installation (run this _after_ running "vagrant up").
+## gpadmin user installation (run this _after_ running "vagrant up").
 ## This is everything that must be installed as the gpadmin user.
 
 Copy over the final "gpadmin" install script from this repository to the master node.
 
     scp setup_master_gpadmin_ssh.sh gpadmin@mdw:/home/gpadmin
 
-Note: if you've done any rework, you might get the hyperbolic 
-"WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" warning.  
+Note: if you've done any rework, you might get the hyperbolic "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" warning.  
 To bypass this error, clean up the known hosts file appropriately.  
-(On my little local Ubuntu setup here, this is facilitated by just 
-"rm ~/.ssh"; this might be too draconian for your own environment though,
-so proceed with caution.
+(On my little local Ubuntu setup here, this is facilitated by just "rm ~/.ssh"; this might be too draconian for your own environment though, so proceed with caution.
 
     vagrant ssh mdw
     sudo su gpadmin
     cd /home/gpadmin
     chmod +x ./setup_master_gpadmin_ssh.sh
     ./setup_master_gpadmin_ssh.sh
+    
+## OPTIONAL: Reset sshd parameters
 
-## Tests
+You may wish to restore sshd parameters to be a bit more security conscious.  Needless to say, this configuration is anything but hardened for a security environment (found in the [reset_sshd_params.sh] script in this repository):
 
-You should see the following message upon completion of the install:
+    sudo su -
+
+    sed -ie 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    sed -ie 's/ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+    sed -ie 's/UsePAM no/UsePAM yes/' /etc/ssh/sshd_config
+    echo "UsePAM yes" >> /etc/ssh/sshd_config
+    systemctl restart sshd.service
+    egrep "^PasswordAuthentication|^ChallengeResponseAuthentication|^UsePAM" /etc/ssh/sshd_config
+
+
+# Tests
+
+You should see the following message upon completion of the install (the script restarts Greenplum one time after installation to effect changes made to the .bashrc file):
+
+**20210317:19:34:56:008419 gpstop:mdw:gpadmin-[INFO]:-Restarting System...**
+
+Create a test database and connect:
+
+    createdb gpdbtest_031721
+    psql gpdbtest_031721
+    
+"\q" exits from psql.
+
+You are now ready to use Greenplum.  To start the database after halting/reloading the Vagrant cluster:
+
+    gpstart
 
 ## Contributors
 
