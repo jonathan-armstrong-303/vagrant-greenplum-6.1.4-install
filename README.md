@@ -15,16 +15,19 @@ Configuration was tested with Vagrant 2.2.6.  (If Vagrant is not installed, I've
 
 ## Installation 
 
-Note that there are four sections regarding installation prerequisites.  [The tl;dr]:
+Note that there are five sections regarding installation prerequisites.  [The tl;dr]:
 
 1. The Vagrant application itself [if not already installed]
 2. External Vagrant packages;
+3. Everything that must be done as root;
 
 ... one mandatory "postrequisite":
 
-3. One script that must be scp'd and executed manually on the Greenplum master node after the main Vagrant build has transpired.
+4. Everything that must be done as gpadmin;
 
-... and one optional script to reset /etc/ssh/sshd.config params to be more security conscious after passwordless ssh is established between all nodes (see below)
+... and one *optional* script: 
+
+5.  reset /etc/ssh/sshd.config params to be more security conscious after passwordless ssh is established between all nodes (keep reading for details).
 
 **The longer explanation:**
 
@@ -32,7 +35,7 @@ The reason for the aforementioned third "postrequisite" script was due to a coup
 
 The author had an incredible amount of difficulty with a couple of [usually] fairly trivial tasks when setting up this Vagrant cluster:
 
-1. Setting up passwordless ssh between nodes which necessitated changing some of the /etc/sshd/sshd.config parameters (I don't even know if these were _necessarily_ necessary to remove; however, after a couple of days of flailing with what should have been a trivial task, I did not mess with the configuration once it was finally working);
+1. Setting up passwordless ssh between nodes which necessitated changing some of the /etc/sshd/sshd.config parameters (I don't even know if these were _necessarily_ necessary to remove; however, after a couple of days of flailing with what should have been a trivial task, I did not change with the configuration once it was finally working);
 
 2. Getting the final lap of the installation (which must be run as the "gpadmin" user -- not root) to transpire using a regular Vagrant provisioning script executed when the cluster is built.
 
