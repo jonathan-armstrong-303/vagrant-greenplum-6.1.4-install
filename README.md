@@ -150,3 +150,4 @@ Dana Brenn's Vagrant install for Greenplum 4.3.4.0 was the initial inspiration f
 https://github.com/danabrenn/greenplum-4-3-4-0_full_install
 
 ## License
+
