@@ -137,8 +137,8 @@ You should see the following message upon completion of the install (the script 
 
 Create a test database and connect:
 
-    createdb gpdbtest_031721
-    psql gpdbtest_031721
+    createdb development
+    psql development
     
 "\q" exits from psql.
 
