@@ -9,7 +9,6 @@ gpadmin_password="r0xs0xb0x"
 # Get rid of some of the author's common bash shell default annoyances
 
 echo "HISTFILESIZE=2000" >> ~/.bashrc
-echo "HISTFILE=2000" >> ~/.bashrc
 echo "set -o vi" >> ~/.bashrc
 
 # Set up some useful aliases [note user is root -- we will set up for gpadmin later]
