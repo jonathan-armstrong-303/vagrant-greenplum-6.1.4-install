@@ -107,7 +107,7 @@ Copy over the final "gpadmin" install script from this repository to the master 
 
 Note: if you've done any rework, you might get the hyperbolic "WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!" warning.  
 To bypass this error, clean up the known hosts file appropriately.  
-(On my little local Ubuntu setup here, this is facilitated by just "rm ~/.ssh"; this might be too draconian for your own environment though, so proceed with caution.  To execute the final "gpadmin section" of the Greenplum installation:
+(On my little local Ubuntu setup here, this is facilitated by just "rm ~/.ssh/*"; this might be too draconian for your own environment though, so proceed with caution.  To execute the final "gpadmin section" of the Greenplum installation:
 
     vagrant ssh mdw
     sudo su gpadmin
